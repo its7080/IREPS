@@ -33,7 +33,7 @@ service.start()
 # Configure Chrome options
 options = webdriver.ChromeOptions()
 options.add_argument('--start-maximized')  # Maximize the Chrome window
-options.add_argument('--headless=new')
+# options.add_argument('--headless=new')
 options.add_argument("--disable-gpu")
 options.add_argument("--log-level=3")
 # options.add_experimental_option('prefs', {
@@ -99,7 +99,7 @@ def getotp():
     driver.execute_script("document.getElementById('verification').value='" + Verification_code + "'")
 
     driver.find_element("xpath", "//input[@value='Get OTP']").click()
-    time.sleep(1)
+    # time.sleep(1)
 
     # Check if the alert is present
     try:
@@ -170,7 +170,7 @@ def __drill(worksheet1,cnt,value):
     # print("ik = ",k)
     #Perform your desired actions for each page here
     # filtered_a_tags = [a_tag for a_tag in a_tags if a_tag.find_elements(By.XPATH, './/img[@title="View Tender Details"]')]
-    time.sleep(1)
+    # time.sleep(1)
     a_tags = driver.find_elements(By.CSS_SELECTOR, "a[onclick]")
     filtered_a_tags = [tag for tag in a_tags if 'postRequestNewWindow(\'/epsn/nitViewAnonyms/rfq/nitPublish.do?' in tag.get_attribute('onclick')]
     # links = len(filtered_a_tags)
@@ -203,13 +203,13 @@ def __drill(worksheet1,cnt,value):
 
         while tender_no is None or dept_rly is None:
             # Check for Tender No.
-            time.sleep(3)
+            # time.sleep(3)
             td_tags = driver.find_elements(By.XPATH, '//td[contains(text(), "Tender No:")]')
             if td_tags:
                 tender_no = td_tags[0].find_element(By.XPATH, "following-sibling::td[1]").text
 
             # Check for Dept/Rly.
-            time.sleep(1)
+            # time.sleep(1)
             td_tags2 = driver.find_elements(By.XPATH, '//td[contains(text(), "Dept/Rly:")]')
             if td_tags2:
                 dept_rly = td_tags2[0].find_element(By.XPATH, "following-sibling::td[1]").text
@@ -248,14 +248,14 @@ def __drill(worksheet1,cnt,value):
 
         # Click on the anchor tag to trigger the function
         download_button.click()
-        time.sleep(1)
+        # time.sleep(1)
         handles2 = driver.window_handles
         driver.switch_to.window(handles2[2])
 
         pdf_url = driver.current_url
 
         save_pdf(pdf_url)
-        time.sleep(1)
+        # time.sleep(1)
         name_of_work, bidding_type, tender_type, bidding_system, tender_closing_date_time, date_time_of_uploading_tender, pre_bid_conference_date_time, advertised_value, earnest_money, contract_type = getpdfdata()
         try:
             closing_datetime = datetime.strptime(tender_closing_date_time, '%d/%m/%Y %H:%M')
@@ -295,10 +295,27 @@ def __drill(worksheet1,cnt,value):
 
         k=k+1
 
+def store_options_in_dictionary(driver):
+  time.sleep(2)
+  """Stores all options in a dictionary."""
+  railway_zone_dropdown = Select(driver.find_element(By.XPATH, "//*[@id='railwayZone']"))
+#   print(railway_zone_dropdown)
+  options = railway_zone_dropdown.options
+#   print(options)
+
+  option_dict = {}
+  for option in options:
+    value = option.get_attribute("value")
+    # print("value = ",value)
+    # time.sleep(10)
+    text = option.get_attribute("innerText")
+    option_dict[value] = text
+  return option_dict
+
 def tender():
 
     driver.refresh()
-    time.sleep(1)
+    # time.sleep(1)
     ver_code = getcap()
 
     # mobile_no = input("Enter 10 digit Mobile No: ")
@@ -310,155 +327,167 @@ def tender():
     driver.execute_script("document.getElementById('otp').value='" + otp_text + "'")
 
     driver.find_element("xpath", "//input[@value='Proceed']").click()
-    time.sleep(1)
+    # time.sleep(1)
     driver.find_element("xpath", "//input[@value='Custom Search']").click()
-    time.sleep(1)
-    try:
-        # Find all elements containing the text 'No Results Found'
-        elements = driver.find_elements(By.XPATH, "//*[contains(text(), 'No Results Found')]")
+    # time.sleep(1)
+    # try:
+    #     # Find all elements containing the text 'No Results Found'
+    #     elements = driver.find_element(By.XPATH, f"//b[text()='No Results Found']")
 
-        # Check if the elements are found and break the loop
-        if elements:
-            print("Found 'No Results Found'. Breaking the loop.")
-        else:
-            print("Text 'No Results Found' not found. Continuing...")
+    #     # Check if the elements are found and break the loop
+    #     if elements:
+    #         print("Found 'No Results Found'. Breaking the loop.")
+    #     else:
+    #         print("Continuing...")
 
-    except:
-        # driver.execute_script("document.getElementById('organization').value='"+ org_id +"'")
-        # Locate the dropdown element using an appropriate selector
-        dropdown_element = driver.find_element(By.ID, 'organization')  # Replace with the actual ID of the dropdown element
+    # except:
+    # driver.execute_script("document.getElementById('organization').value='"+ org_id +"'")
+    # Locate the dropdown element using an appropriate selector
+    dropdown_element = driver.find_element(By.ID, 'organization')  # Replace with the actual ID of the dropdown element
 
-        # Create a Select object and interact with the dropdown
-        select = Select(dropdown_element)
+    # Create a Select object and interact with the dropdown
+    select = Select(dropdown_element)
 
-        # Select option by visible text
-        # select.select_by_visible_text('Option Text')
+    # Select option by visible text
+    # select.select_by_visible_text('Option Text')
 
-        # Select option by value
-        select.select_by_value(org_id)
+    # Select option by value
+    select.select_by_value(org_id)
 
+    # time.sleep(1)
+
+    # # Find the select element by ID, name, class, or XPath
+    # select_element = driver.find_element(By.ID, "railwayZone")  # Replace "railwayZone" with the actual ID of your select element
+
+    # # Get all the options within the select element
+    # options = select_element.find_elements(By.TAG_NAME, "option")
+    # print("option",options[0])
+    # time.sleep(1)
+    # Create an empty dictionary to store the key-value pairs
+    options_dict = store_options_in_dictionary(driver)
+    # Extract the options and values
+    # for option in options:
+    #     value = option.get_attribute("value")
+    #     text = option.text
+    #     options_dict[value] = text
+    # Print the options dictionary
+    print("------- ZONE LIST -------")
+    for value in options_dict.values():
+        if value == "ALL" or value == "---Select---" or value == "All" or value == "IREPS-TESTING" or value == "IREPS-TESTING2":
+            continue  # Skip the current iteration and move to the next one
+        print(value)
+    # time.sleep(1)
+    # sys.exit()
+    # Iterate through all keys in options_dict and print key-value pairs
+    for key, value in options_dict.items():
+        if value == "ALL" or value == "---Select---" or value == "All" or value == "IREPS-TESTING" or value == "IREPS-TESTING2":
+            continue  # Skip the current iteration and move to the next one or value == "Banaras Locomotive Works" or value == "COFMOW"
+        # print(f"\nKey: {key}")
+        print(f"\nScraping -> {value}")
+        print("-----------")
+        # print(type(org_id))
+        # print(type(key))
+        # time.sleep(1)
+        driver.execute_script("document.getElementById('organization').value='"+ org_id +"'")
+        driver.execute_script("document.getElementById('workArea').value='WT'")
+        driver.execute_script("document.getElementById('railwayZone').value='"+ key +"'")
+        driver.execute_script("document.getElementById('tenderType').value=2")
+        driver.execute_script("document.getElementById('tenderStage').value=1")
+        # driver.execute_script("document.getElementByName('selectDate').value='Tender Closing Date'")
+        script = """
+        var selectElement = document.getElementsByName("selectDate")[0];
+        for (var i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].textContent === "Tender Closing Date") {
+                selectElement.selectedIndex = i;
+                break;
+            }
+        }
+        """
+        driver.execute_script(script)
+        # Get the current date
+        current_date = datetime.now()
+        # Add four months to the current date
+        four_months_later = current_date + relativedelta(months=4)
+        # Format the date as a string (optional)
+        formatted_date = four_months_later.strftime("%d/%m/%Y")
+        driver.execute_script("document.getElementById('ddmmyyDateformat2').value='" + formatted_date + "'")
+        # time.sleep(3)
+        driver.find_element("xpath", "//input[@value='Show Results']").click()
         # time.sleep(1)
 
-        # Find the select element by ID, name, class, or XPath
-        select_element = driver.find_element(By.ID, "railwayZone")  # Replace "railwayZone" with the actual ID of your select element
+        # # Find all elements containing the text 'No Results Found'
+        # elements = driver.find_element(By.XPATH, f"//b[text()='No Results Found']")
 
-        # Get all the options within the select element
-        options = select_element.find_elements(By.TAG_NAME, "option")
-        # time.sleep(1)
-        # Create an empty dictionary to store the key-value pairs
-        options_dict = {}
+        # # Check if the elements are found and break the loop
+        # if elements:
+        #     print("Found 'No Results Found'. Breaking the loop.")
+        # else:
+        #     print("Continuing...")
 
-        # Extract the options and values
-        for option in options:
-            value = option.get_attribute("value")
-            text = option.text
-            options_dict[value] = text
-        # Print the options dictionary
-        print("------- ZONE LIST -------")
-        for value in options_dict.values():
-            if value == "ALL" or value == "---Select---" or value == "All" or value == "IREPS-TESTING" or value == "IREPS-TESTING2":
-                continue  # Skip the current iteration and move to the next one
-            print(value)
-        # time.sleep(1)
-        # sys.exit()
-        # Iterate through all keys in options_dict and print key-value pairs
-        for key, value in options_dict.items():
-            if value == "ALL" or value == "---Select---" or value == "All" or value == "IREPS-TESTING" or value == "IREPS-TESTING2":
-                continue  # Skip the current iteration and move to the next one or value == "Banaras Locomotive Works" or value == "COFMOW"
-            # print(f"\nKey: {key}")
-            print(f"\nScraping -> {value}")
-            print("-----------")
-            # print(type(org_id))
-            # print(type(key))
-            # time.sleep(1)
-            driver.execute_script("document.getElementById('organization').value='"+ org_id +"'")
-            driver.execute_script("document.getElementById('workArea').value='WT'")
-            driver.execute_script("document.getElementById('railwayZone').value='"+ key +"'")
-            driver.execute_script("document.getElementById('tenderType').value=2")
-            driver.execute_script("document.getElementById('tenderType').value='Tender Closing Date'")
-            # script = """
-            # var selectElement = document.getElementsByName("selectDate")[0];
-            # for (var i = 0; i < selectElement.options.length; i++) {
-            #     if (selectElement.options[i].textContent === "Tender Uploading Date") {
-            #         selectElement.selectedIndex = i;
-            #         break;
-            #     }
-            # }
-            # """
-            # driver.execute_script(script)
-            # Get the current date
-            current_date = datetime.now()
-            # Add four months to the current date
-            four_months_later = current_date + relativedelta(months=4)
-            # Format the date as a string (optional)
-            formatted_date = four_months_later.strftime("%d/%m/%Y")
-            driver.execute_script("document.getElementById('ddmmyyDateformat2').value='" + formatted_date + "'")
-            # time.sleep(3)
-            driver.find_element("xpath", "//input[@value='Show Results']").click()
-            # time.sleep(1)
 
-            # Create the folder if it doesn't exist
-            if not os.path.exists(org_name):
-                os.makedirs(org_name)
 
-            # Create an Excel workbook to store the scraped data
-            b = datetime.now()
-            fname = b.strftime("%d-%m-%Y %H_%M_%S")
+        # Create the folder if it doesn't exist
+        if not os.path.exists(org_name):
+            os.makedirs(org_name)
 
-            file_name = value + '_' + fname + '.xlsx'
-            file_path = os.path.join(org_name, file_name)
+        # Create an Excel workbook to store the scraped data
+        b = datetime.now()
+        fname = b.strftime("%d-%m-%Y %H_%M_%S")
 
-            workbook = xlsxwriter.Workbook(file_path)
-            worksheet1 = workbook.add_worksheet("ListOfTenders")
+        file_name = value + '_' + fname + '.xlsx'
+        file_path = os.path.join(org_name, file_name)
 
-            # Write the column headers in the worksheet
-            worksheet1.write(0, 0, "Zone")
-            worksheet1.write(0, 1, "Dept.")
-            worksheet1.write(0, 2, "Tender No.")
-            worksheet1.write(0, 3, "Tender Title")
-            worksheet1.write(0, 4, "Type")
-            worksheet1.write(0, 5, "Due Date/Time")
-            worksheet1.write(0, 6, "Due Days")
-            worksheet1.write(0, 7, "Advertised Value")
-            worksheet1.write(0, 8, "Doc Link")
-            worksheet1.write(0, 9,"Bidding type")
-            worksheet1.write(0, 10,"Bidding System")
-            worksheet1.write(0, 11,"Date Time Of Uploading Tender")
-            worksheet1.write(0, 12,"Pre-Bid Conference Date Time")
-            worksheet1.write(0, 13,"Earnest Money (Rs.)")
-            worksheet1.write(0, 14,"Contract Type")
+        workbook = xlsxwriter.Workbook(file_path)
+        worksheet1 = workbook.add_worksheet("ListOfTenders")
 
-            cnt = 0
-            i = 1
-            while i <= 1000:
-                print("\nPage = ", i)
-                xpath_expression = f"//a[text()='{i}']"
+        # Write the column headers in the worksheet
+        worksheet1.write(0, 0, "Zone")
+        worksheet1.write(0, 1, "Dept.")
+        worksheet1.write(0, 2, "Tender No.")
+        worksheet1.write(0, 3, "Tender Title")
+        worksheet1.write(0, 4, "Type")
+        worksheet1.write(0, 5, "Due Date/Time")
+        worksheet1.write(0, 6, "Due Days")
+        worksheet1.write(0, 7, "Advertised Value")
+        worksheet1.write(0, 8, "Doc Link")
+        worksheet1.write(0, 9,"Bidding type")
+        worksheet1.write(0, 10,"Bidding System")
+        worksheet1.write(0, 11,"Date Time Of Uploading Tender")
+        worksheet1.write(0, 12,"Pre-Bid Conference Date Time")
+        worksheet1.write(0, 13,"Earnest Money (Rs.)")
+        worksheet1.write(0, 14,"Contract Type")
 
+        cnt = 0
+        i = 1
+        while i <= 1000:
+            print("\nPage = ", i)
+            xpath_expression = f"//a[text()='{i}']"
+
+            try:
+                element = driver.find_element(By.XPATH, xpath_expression)
+                element.click()
+            except Exception as e:
+                # Handle specific exceptions here
+                if i == 1:
+                    __drill(worksheet1, cnt, value)
+                break
+            __drill(worksheet1, cnt, value)
+            if i % 10 == 0:
+                print("\n\n")
+                next_btn = f"//a[font[text()='next']]"
+                # time.sleep(1)
                 try:
-                    element = driver.find_element(By.XPATH, xpath_expression)
+                    element = driver.find_element(By.XPATH, next_btn)
                     element.click()
-                except Exception as e:
-                    # Handle specific exceptions here
-                    if i == 1:
-                        __drill(worksheet1, cnt, value)
+                except NoSuchElementException:
+                    print(f"Element with text 'next' not found")
                     break
-                __drill(worksheet1, cnt, value)
-                if i % 10 == 0:
-                    print("\n\n")
-                    next_btn = f"//a[font[text()='next']]"
-                    time.sleep(1)
-                    try:
-                        element = driver.find_element(By.XPATH, next_btn)
-                        element.click()
-                    except NoSuchElementException:
-                        print(f"Element with text 'next' not found")
-                        break
-                i += 1
-                cnt += 1
+            i += 1
+            cnt += 1
 
-            # Close the workbook
-            print("\nZone data Saved.")
-            workbook.close()
+        # Close the workbook
+        print("\nZone data Saved.")
+        workbook.close()
 
 
 
