@@ -20,11 +20,11 @@ from selenium.common.exceptions import NoSuchElementException
 import urllib.request
 from requests.exceptions import Timeout, RequestException
 # Accessing command-line arguments
-arguments = sys.argv
-script_name = arguments[0]
-org_id = arguments[1]
-org_name = arguments[2]
-mobile_no = arguments[3]
+# arguments = sys.argv
+# script_name = arguments[0]
+# org_id = arguments[1]
+# org_name = arguments[2]
+# mobile_no = arguments[3]
 
 # Start the WebDriver service
 service = Service(ChromeDriverManager().install())
@@ -33,7 +33,7 @@ service.start()
 # Configure Chrome options
 options = webdriver.ChromeOptions()
 options.add_argument('--start-maximized')  # Maximize the Chrome window
-# options.add_argument('--headless=new')
+options.add_argument('--headless=new')
 options.add_argument("--disable-gpu")
 options.add_argument("--log-level=3")
 # options.add_experimental_option('prefs', {
@@ -52,7 +52,7 @@ url = "https://www.ireps.gov.in/epsn/anonymSearch.do"
 driver.get(url)
 
 print("Welcome to the IREPS Scraping system!")
-print("Org: ", org_name)
+
 
 def getcap():
     # Find the <img> element with the src attribute containing "Captcha.jpg"
@@ -91,7 +91,7 @@ def getcap():
 
     return Verification_code
 
-def getotp():
+def getotp(mobile_no):
     Verification_code = getcap()
     # mobile_no = input("Enter 10 digit Mobile No: ")
     driver.execute_script("document.getElementById('mobileNo').value='" + mobile_no + "'")
@@ -118,12 +118,12 @@ def getotp():
     print("OTP generated check your message box")
     return Verification_code
 
-def save_pdf(pdf_url):
+def save_pdf(pdf_url, script_name):
     try:
         response = requests.get(pdf_url, timeout=30)
         response.raise_for_status()  # Raise an exception if the response status code indicates an error
         pdf_content = response.content
-        with open(f'{org_name}.pdf', 'wb') as f:
+        with open(f'{script_name}.pdf', 'wb') as f:
             f.write(pdf_content)
         # print(f"PDF for {org_name} downloaded successfully.")
     except Timeout:
@@ -133,9 +133,9 @@ def save_pdf(pdf_url):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
-def getpdfdata():
-
-    with pdfplumber.open(f'{org_name}.pdf') as pdf:
+def getpdfdata(script_name):
+    time.sleep(1)
+    with pdfplumber.open(f'{script_name}.pdf') as pdf:
         table = pdf.pages[0].extract_tables()[0]
 
     table = [[value for value in sublist if value is not None] for sublist in table]
@@ -163,7 +163,7 @@ def getpdfdata():
     return name_of_work, bidding_type, tender_type, bidding_system, tender_closing_date_time, date_time_of_uploading_tender, pre_bid_conference_date_time, advertised_value, earnest_money, contract_type
 
 
-def __drill(worksheet1,cnt,value):
+def __drill(worksheet1,cnt,value,script_number,script_name):
     # print("i = ", i)
     # print(no_of_pages)
 
@@ -254,9 +254,9 @@ def __drill(worksheet1,cnt,value):
 
         pdf_url = driver.current_url
 
-        save_pdf(pdf_url)
+        save_pdf(pdf_url, script_name)
         # time.sleep(1)
-        name_of_work, bidding_type, tender_type, bidding_system, tender_closing_date_time, date_time_of_uploading_tender, pre_bid_conference_date_time, advertised_value, earnest_money, contract_type = getpdfdata()
+        name_of_work, bidding_type, tender_type, bidding_system, tender_closing_date_time, date_time_of_uploading_tender, pre_bid_conference_date_time, advertised_value, earnest_money, contract_type = getpdfdata(script_name)
         try:
             closing_datetime = datetime.strptime(tender_closing_date_time, '%d/%m/%Y %H:%M')
             uploading_datetime = datetime.strptime(date_time_of_uploading_tender, '%d/%m/%Y %H:%M')
@@ -311,9 +311,7 @@ def store_options_in_dictionary(driver):
     text = option.get_attribute("innerText")
     option_dict[value] = text
   return option_dict
-
-def tender():
-
+def login(mobile_no):
     driver.refresh()
     # time.sleep(1)
     ver_code = getcap()
@@ -329,6 +327,25 @@ def tender():
     driver.find_element("xpath", "//input[@value='Proceed']").click()
     # time.sleep(1)
     driver.find_element("xpath", "//input[@value='Custom Search']").click()
+    return driver
+
+def tender(driver, script_number, script_name):
+
+    # driver.refresh()
+    # # time.sleep(1)
+    # ver_code = getcap()
+
+    # # mobile_no = input("Enter 10 digit Mobile No: ")
+    # otp_text = input("Enter The OTP: ")
+    # driver.execute_script("document.getElementById('mobileNo').value='" + mobile_no + "'")
+
+    # driver.execute_script("document.getElementById('verification').value='" + ver_code + "'")
+
+    # driver.execute_script("document.getElementById('otp').value='" + otp_text + "'")
+
+    # driver.find_element("xpath", "//input[@value='Proceed']").click()
+    # # time.sleep(1)
+    # driver.find_element("xpath", "//input[@value='Custom Search']").click()
     # time.sleep(1)
     # try:
     #     # Find all elements containing the text 'No Results Found'
@@ -352,7 +369,7 @@ def tender():
     # select.select_by_visible_text('Option Text')
 
     # Select option by value
-    select.select_by_value(org_id)
+    select.select_by_value(script_number)
 
     # time.sleep(1)
 
@@ -388,7 +405,7 @@ def tender():
         # print(type(org_id))
         # print(type(key))
         # time.sleep(1)
-        driver.execute_script("document.getElementById('organization').value='"+ org_id +"'")
+        driver.execute_script("document.getElementById('organization').value='"+ script_number +"'")
         driver.execute_script("document.getElementById('workArea').value='WT'")
         driver.execute_script("document.getElementById('railwayZone').value='"+ key +"'")
         driver.execute_script("document.getElementById('tenderType').value=2")
@@ -427,15 +444,15 @@ def tender():
 
 
         # Create the folder if it doesn't exist
-        if not os.path.exists(org_name):
-            os.makedirs(org_name)
+        if not os.path.exists(script_name):
+            os.makedirs(script_name)
 
         # Create an Excel workbook to store the scraped data
         b = datetime.now()
         fname = b.strftime("%d-%m-%Y %H_%M_%S")
 
         file_name = value + '_' + fname + '.xlsx'
-        file_path = os.path.join(org_name, file_name)
+        file_path = os.path.join(script_name, file_name)
 
         workbook = xlsxwriter.Workbook(file_path)
         worksheet1 = workbook.add_worksheet("ListOfTenders")
@@ -469,9 +486,9 @@ def tender():
             except Exception as e:
                 # Handle specific exceptions here
                 if i == 1:
-                    __drill(worksheet1, cnt, value)
+                    __drill(worksheet1, cnt, value, script_number, script_name)
                 break
-            __drill(worksheet1, cnt, value)
+            __drill(worksheet1, cnt, value, script_number, script_name)
             if i % 10 == 0:
                 print("\n\n")
                 next_btn = f"//a[font[text()='next']]"
@@ -486,28 +503,90 @@ def tender():
             cnt += 1
 
         # Close the workbook
-        print("\nZone data Saved.")
+        print("\nZone data Saved.\n\n")
         workbook.close()
 
 
 
 
+scripts = [('12', 'BRAITHWAITE AND CO. LIMITED'),
+           ('11', 'CONTAINER CORPORATION OF INDIA LTD'),
+           ('05', 'CRIS'),
+           ('08', 'DFCCIL'),
+           ('03', 'DMRC'),
+           ('17', 'INDIAN RAILWAY FINANCE CORPORATION'),
+           ('15', 'IRCON INTERNATIONAL LIMITED'),
+           ('01', 'Indian Railway'),
+           ('09', 'KERALA RAIL DEVELOPMENT CORPORATION LTD'),
+           ('18', 'KOLKATA METRO RAIL CORPORATION LTD'),
+           ('02', 'KRCL'),
+           ('04', 'MRVC'),
+           ('10', 'RAIL VIKAS NIGAM LIMITED'),
+           ('07', 'RAILTEL'),
+           ('06', 'RITES Limited')]
 
+def clear_screen():
+    # Function to clear the terminal screen based on the OS.
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def display_menu():
+    clear_screen()
+    print("Choose an option:")
+    print("1. Run all scripts")
+    print("2. Select scripts to run")
+    print("0. Exit")
+
+def run_all_scripts(driver):
+    for script in scripts:
+        script_number, script_name = script
+        print(f"Running script {script_number}: {script_name}")
+        tender(driver, script_number, script_name)
+
+def select_scripts_to_run(driver):
+    print("Select scripts to run:")
+    for i, script in enumerate(scripts, 1):
+        script_number, script_name = script
+        print(f"{i}. {script_number}: {script_name}")
+
+    selected_scripts = input("Enter the numbers of the scripts to run (comma-separated): ").split(",")
+    selected_scripts = [int(s) for s in selected_scripts]
+
+    for num in selected_scripts:
+        if 1 <= num <= len(scripts):
+            script_number, script_name = scripts[num - 1]
+            print(f"Running script {script_number}: {script_name}")
+            tender(driver, script_number, script_name)
+        else:
+            print(f"Invalid script number: {num}")
 
 
 
 def main():
-
+    mobile_no = input("Enter 10 digit Mobile No: ")
     while True:
         print("\n1. Login")
         print("2. Generate OTP")
         print("3. Exit")
         choice = input("Enter your choice: ")
         if choice == "1":
-            tender()
+            driver = login(mobile_no)
+            while True:
+                display_menu()
+                choice = input("Enter your choice: ")
+                if choice == '1':
+                    clear_screen()
+                    run_all_scripts(driver)
+                elif choice == '2':
+                    clear_screen()
+                    select_scripts_to_run(driver)
+                elif choice == '0':
+                    print("Exiting...")
+                    break
+                else:
+                    print("Invalid choice. Please try again.")
             break
         elif choice == "2":
-            getotp()
+            getotp(mobile_no)
         elif choice == "3":
             break
         else:
